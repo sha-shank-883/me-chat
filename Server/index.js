@@ -31,9 +31,9 @@ const server = app.listen(PORT, () => {
   console.log(`Server started on ${PORT}`);
 });
 
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static("Client/build"));
-}
+// if (process.env.NODE_ENV === "production") {
+//   app.use(express.static("Client/build"));
+// }
 
 // if (process.env.NODE_ENV === "production") {
 //   app.use(express.static(path.join(_dirname, " /Client/build")));
