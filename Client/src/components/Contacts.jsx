@@ -72,6 +72,7 @@ const Container = styled.div`
   background-color: #080420;
   .brand {
     display: flex;
+    background-color: #26218b;
     align-items: center;
     gap: 1rem;
     justify-content: center;
@@ -85,6 +86,7 @@ const Container = styled.div`
   }
   .contacts {
     display: flex;
+    margin-top: 1rem;
     flex-direction: column;
     align-items: center;
     overflow: auto;

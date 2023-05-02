@@ -2,15 +2,28 @@ import React, { useEffect, useState, useRef } from "react";
 import styled from "styled-components";
 import ChatInput from "./ChatInput";
 import Logout from "./Logout";
+// import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
+import { BiBoltCircle, BiHome, BiXCircle } from "react-icons/bi";
 // import Messages from "./Messages";
 import axios from "axios";
-import { getAllMessagesRoute, sendMessageRoute } from "../utils/APIRoutes";
+import {
+  getAllMessagesRoute,
+  sendMessageRoute,
+  deleteMessageRoute,
+  deleteUserProfileRoute,
+} from "../utils/APIRoutes";
 
-export default function ChatContainer({ currentChat, currentUser, socket }) {
+export default function ChatContainer({
+  currentChat,
+  currentUser,
+  socket,
+  onBack,
+}) {
   const [messages, setMessages] = useState([]);
   const [arrivalMessage, setArrivalMessage] = useState(null);
   const scrollRef = useRef();
+  // const navigate = useNavigate();
 
   useEffect(() => {
     const fn = async () => {
@@ -24,6 +37,22 @@ export default function ChatContainer({ currentChat, currentUser, socket }) {
     };
     fn();
   }, [currentChat]);
+
+  const handleDeleteMsg = async (id) => {
+    console.log("Deleting message with id:", id);
+    await deleteMessage(id);
+    async function deleteMessage(id) {
+      try {
+        const response = await axios.delete(`${deleteMessageRoute}/${id}`);
+        console.log(response.data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    const msgs = messages.filter((msg) => msg._id !== id);
+    setMessages(msgs);
+    console.log("Message deleted:", id);
+  };
 
   const handleSendMsg = async (msg) => {
     await axios.post(sendMessageRoute, {
@@ -55,6 +84,30 @@ export default function ChatContainer({ currentChat, currentUser, socket }) {
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behaviour: "smooth" });
   }, [messages]);
+
+  const deleteUser = async (userId) => {
+    try {
+      const response = await axios.delete(
+        `${deleteUserProfileRoute}/${userId}`
+      );
+      console.log(response.data); // log response data if needed
+    } catch (error) {
+      console.error(error);
+    }
+    // console.log(response.data);
+  };
+
+  // const handleDeleteProfile = () => {
+  //   const confirmDelete = window.confirm(
+  //     "Are you sure you want to delete your profile?"
+  //   );
+  //   if (confirmDelete) {
+  //     deleteUser(currentUser._id); // pass the user ID as a parameter
+  //     localStorage.removeItem("chat-app-user"); // remove the user data from localStorage
+  //     // navigate("/"); // navigate to the login page
+  //   }
+  // };
+
   return (
     <>
       {currentChat && (
@@ -71,6 +124,13 @@ export default function ChatContainer({ currentChat, currentUser, socket }) {
                 <h3>{currentChat.username}</h3>
               </div>
             </div>
+            {/* <button>Back</button> */}
+            <Button onClick={onBack}>
+              <BiHome />
+            </Button>
+            <Button onClick={deleteUser}>
+              <BiBoltCircle />
+            </Button>
             <Logout />
           </div>
           {/* <Messages /> */}
@@ -86,6 +146,9 @@ export default function ChatContainer({ currentChat, currentUser, socket }) {
                     <div className="content">
                       <p>{message.message}</p>
                     </div>
+                    <Button onClick={() => handleDeleteMsg(message._id)}>
+                      <BiXCircle />
+                    </Button>
                   </div>
                 </div>
               );
@@ -101,12 +164,14 @@ const Container = styled.div`
   display: grid;
   grid-template-rows: 10% 80% 10%;
   gap: 0.1rem;
+  background-color: black;
   overflow: hidden;
   @media screen and (min-width: 720px) and (max-width: 1080px) {
-    grid-template-rows: 15% 70% 15%;
+    grid-template-rows: 10% 80% 10%;
   }
   .chat-header {
     display: flex;
+    background: #6262ff;
     justify-content: space-between;
     align-items: center;
     padding: 0 2rem;
@@ -158,14 +223,34 @@ const Container = styled.div`
     .sended {
       justify-content: flex-end;
       .content {
-        background-color: #4f04ff21;
+        background-color: #551b8fd6;
       }
     }
     .recieved {
       justify-content: flex-start;
       .content {
-        background-color: #9900ff20;
+        background-color: #615c66d6;
       }
+    }
+  }
+`;
+const Button = styled.button`
+  display: flrx;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 1rem;
+  background-color: #26218b;
+  border: none;
+  cursor: pointer;
+  svg {
+    font-size: 1.3rem;
+    color: #ffffff;
+  }
+  &:hover {
+    svg {
+      font-size: 1.4rem;
+      color: red;
     }
   }
 `;

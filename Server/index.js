@@ -8,7 +8,8 @@ const app = express();
 const socket = require("socket.io");
 require("dotenv").config();
 const PORT = process.env.PORT || 5000;
-const BASE_URL = process.env.BASE_URL;
+// const BASE_URL = process.env.BASE_URL;
+
 app.use(cors());
 app.use(express.json());
 

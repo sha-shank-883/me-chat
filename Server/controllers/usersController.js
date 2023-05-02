@@ -73,3 +73,16 @@ module.exports.getAllUsers = async (req, res, next) => {
     next(ex);
   }
 };
+
+module.exports.deleteUserProfile = async (req, res, next) => {
+  try {
+    const userId = req.params.id;
+    const deletedUser = await User.findByIdAndDelete(userId);
+    if (!deletedUser) {
+      return res.json({ msg: "User not found", status: false });
+    }
+    return res.json({ msg: "User deleted successfully", status: true });
+  } catch (ex) {
+    next(ex);
+  }
+};

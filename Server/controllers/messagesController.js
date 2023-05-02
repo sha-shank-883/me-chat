@@ -35,3 +35,18 @@ module.exports.getAllMessage = async (req, res, next) => {
     next(ex);
   }
 };
+
+module.exports.deleteMessage = async (req, res, next) => {
+  try {
+    const { from, to } = req.body;
+    const deletedMsg = await messageModel.deleteOne({
+      users: {
+        $all: [from, to],
+      },
+    });
+    if (deletedMsg) return res.json({ msg: "Message deleted successfully." });
+    return res.json({ msg: "failed to delete message from the databse" });
+  } catch (ex) {
+    next(ex);
+  }
+};
