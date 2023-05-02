@@ -2,9 +2,9 @@ import React, { useEffect, useState, useRef } from "react";
 import styled from "styled-components";
 import ChatInput from "./ChatInput";
 import Logout from "./Logout";
-// import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import { BiBoltCircle, BiHome, BiXCircle } from "react-icons/bi";
+import { BiCoffeeTogo, BiHome, BiXCircle } from "react-icons/bi";
 // import Messages from "./Messages";
 import axios from "axios";
 import {
@@ -23,7 +23,7 @@ export default function ChatContainer({
   const [messages, setMessages] = useState([]);
   const [arrivalMessage, setArrivalMessage] = useState(null);
   const scrollRef = useRef();
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fn = async () => {
@@ -85,28 +85,27 @@ export default function ChatContainer({
     scrollRef.current?.scrollIntoView({ behaviour: "smooth" });
   }, [messages]);
 
-  const deleteUser = async (userId) => {
+  const deleteUser = async () => {
     try {
       const response = await axios.delete(
-        `${deleteUserProfileRoute}/${userId}`
+        `${deleteUserProfileRoute}/${currentUser._id}`
       );
-      console.log(response.data); // log response data if needed
+      console.log(response.data);
     } catch (error) {
       console.error(error);
     }
-    // console.log(response.data);
   };
 
-  // const handleDeleteProfile = () => {
-  //   const confirmDelete = window.confirm(
-  //     "Are you sure you want to delete your profile?"
-  //   );
-  //   if (confirmDelete) {
-  //     deleteUser(currentUser._id); // pass the user ID as a parameter
-  //     localStorage.removeItem("chat-app-user"); // remove the user data from localStorage
-  //     // navigate("/"); // navigate to the login page
-  //   }
-  // };
+  const handleDeleteProfile = () => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete your profile?"
+    );
+    if (confirmDelete) {
+      deleteUser(currentUser._id); // pass the user ID as a parameter
+      localStorage.removeItem("chat-app-user"); // remove the user data from localStorage
+      navigate("/login"); // navigate to the login page
+    }
+  };
 
   return (
     <>
@@ -128,8 +127,8 @@ export default function ChatContainer({
             <Button onClick={onBack}>
               <BiHome />
             </Button>
-            <Button onClick={deleteUser}>
-              <BiBoltCircle />
+            <Button onClick={handleDeleteProfile}>
+              <BiCoffeeTogo />
             </Button>
             <Logout />
           </div>
@@ -235,7 +234,7 @@ const Container = styled.div`
   }
 `;
 const Button = styled.button`
-  display: flrx;
+  display: flex;
   justify-content: center;
   align-items: center;
   padding: 0.5rem;

@@ -138,17 +138,12 @@ const Container = styled.div`
         transition: 0.5s ease-in-out;
       }
     }
-  
+
     .selected {
       border: 0.4rem solid #4e0eff;
     }
   }
-    @media only screen and (max-width: 720px) {
-    .avatars {
-    display: flex;
-    flex-direction: inherit;
-    gap: 1rem;
-     }
+
   .submit-btn {
     background-color: #4e0eff;
     color: white;
