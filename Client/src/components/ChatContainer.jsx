@@ -38,21 +38,21 @@ export default function ChatContainer({
     fn();
   }, [currentChat]);
 
-  const handleDeleteMsg = async (id) => {
-    console.log("Deleting message with id:", id);
-    await deleteMessage(id);
-    async function deleteMessage(id) {
-      try {
-        const response = await axios.delete(`${deleteMessageRoute}/${id}`);
-        console.log(response.data);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-    const msgs = messages.filter((msg) => msg._id !== id);
-    setMessages(msgs);
-    console.log("Message deleted:", id);
-  };
+  // const handleDeleteMsg = async (id) => {
+  //   console.log("Deleting message with id:", id);
+  //   await deleteMessage(id);
+  //   async function deleteMessage(id) {
+  //     try {
+  //       const response = await axios.delete(`${deleteMessageRoute}/${id}`);
+  //       console.log(response.data);
+  //     } catch (error) {
+  //       console.error(error);
+  //     }
+  //   }
+  //   const msgs = messages.filter((msg) => msg._id !== id);
+  //   setMessages(msgs);
+  //   console.log("Message deleted:", id);
+  // };
 
   const handleSendMsg = async (msg) => {
     await axios.post(sendMessageRoute, {
@@ -145,9 +145,9 @@ export default function ChatContainer({
                     <div className="content">
                       <p>{message.message}</p>
                     </div>
-                    <Button onClick={() => handleDeleteMsg(message._id)}>
+                    {/* <Button onClick={() => handleDeleteMsg(message._id)}>
                       <BiXCircle />
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
               );
