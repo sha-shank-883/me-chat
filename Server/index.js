@@ -59,6 +59,7 @@ io.on("connection", (socket) => {
   global.chatSocket = socket;
   socket.on("add-user", (userId) => {
     onlineUsers.set(userId, socket.id);
+    io.emit("user-online", userId);
   });
   socket.on("send-msg", (data) => {
     const sendUserSocket = onlineUsers.get(data.to);
@@ -71,11 +72,11 @@ io.on("connection", (socket) => {
   console.log(`Socket connected: ${socket.id}`);
 
   // Add the user to the online users list
-  socket.on("add-user", (userId) => {
-    onlineUsers.set(userId, socket.id);
-    // Emit a socket event to update the online status of the user
-    io.emit("user-online", userId);
-  });
+  // socket.on("add-user", (userId) => {
+  //   onlineUsers.set(userId, socket.id);
+  //   // Emit a socket event to update the online status of the user
+  //   io.emit("user-online", userId);
+  // });
 
   // Add a socket event to send the doc and save it in the database
   socket.on("send-doc", (data) => {
