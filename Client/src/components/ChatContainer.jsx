@@ -4,13 +4,13 @@ import ChatInput from "./ChatInput";
 import Logout from "./Logout";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import { BiCoffeeTogo, BiHome, BiXCircle } from "react-icons/bi";
+import { BiTrash, BiHome, BiXCircle } from "react-icons/bi";
 // import Messages from "./Messages";
 import axios from "axios";
 import {
   getAllMessagesRoute,
   sendMessageRoute,
-  deleteMessageRoute,
+  // deleteMessageRoute,
   deleteUserProfileRoute,
 } from "../utils/APIRoutes";
 
@@ -22,6 +22,7 @@ export default function ChatContainer({
 }) {
   const [messages, setMessages] = useState([]);
   const [arrivalMessage, setArrivalMessage] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
   const scrollRef = useRef();
   const navigate = useNavigate();
 
@@ -32,27 +33,11 @@ export default function ChatContainer({
           from: currentUser._id,
           to: currentChat._id,
         });
-        setMessages(response.data);
+        setMessages(response.data.reverse());
       }
     };
     fn();
   }, [currentChat]);
-
-  // const handleDeleteMsg = async (id) => {
-  //   console.log("Deleting message with id:", id);
-  //   await deleteMessage(id);
-  //   async function deleteMessage(id) {
-  //     try {
-  //       const response = await axios.delete(`${deleteMessageRoute}/${id}`);
-  //       console.log(response.data);
-  //     } catch (error) {
-  //       console.error(error);
-  //     }
-  //   }
-  //   const msgs = messages.filter((msg) => msg._id !== id);
-  //   setMessages(msgs);
-  //   console.log("Message deleted:", id);
-  // };
 
   const handleSendMsg = async (msg) => {
     await axios.post(sendMessageRoute, {
@@ -107,6 +92,41 @@ export default function ChatContainer({
     }
   };
 
+  useEffect(() => {
+    const handleUserDeleted = (deletedUserId) => {
+      if (deletedUserId === currentChat?._id) {
+        window.location.reload();
+      }
+    };
+    if (socket.current) {
+      socket.current.on("user-deleted", handleUserDeleted);
+    }
+    return () => {
+      if (socket.current) {
+        socket.current.off("user-deleted", handleUserDeleted);
+      }
+    };
+  }, [currentChat, socket]);
+
+  useEffect(() => {
+    if (socket.current) {
+      socket.current.on("user-online", (userId) => {
+        setOnlineUsers(
+          (prevOnlineUsers) => new Set(prevOnlineUsers.add(userId))
+        );
+      });
+      socket.current.on("user-offline", (userId) => {
+        setOnlineUsers((prevOnlineUsers) => {
+          const updatedOnlineUsers = new Set(prevOnlineUsers);
+          updatedOnlineUsers.delete(userId);
+          return updatedOnlineUsers;
+        });
+      });
+    }
+  }, []);
+
+  // var moment = require("moment"); // require
+  // moment().format();
   return (
     <>
       {currentChat && (
@@ -118,6 +138,15 @@ export default function ChatContainer({
                   src={`data:image/svg+xml;base64,${currentChat.avatarImage}`}
                   alt=""
                 />
+                <div
+                  className={`status ${
+                    onlineUsers.has(currentChat._id) ? "online" : "offline"
+                  }`}
+                >
+                  <div className="status-text">
+                    {onlineUsers.has(currentChat._id) ? "online" : "offline"}
+                  </div>
+                </div>
               </div>
               <div className="username">
                 <h3>{currentChat.username}</h3>
@@ -128,13 +157,16 @@ export default function ChatContainer({
               <BiHome />
             </Button>
             <Button onClick={handleDeleteProfile}>
-              <BiCoffeeTogo />
+              <BiTrash />
             </Button>
             <Logout />
           </div>
           {/* <Messages /> */}
           <div className="chat-messages">
             {messages.map((message) => {
+              const time = message.timestamp;
+              const moment = require("moment");
+              const formattedTime = moment(time).format("h:mm A");
               return (
                 <div ref={scrollRef} key={uuidv4()}>
                   <div
@@ -146,8 +178,9 @@ export default function ChatContainer({
                       <p>{message.message}</p>
                     </div>
                     {/* <Button onClick={() => handleDeleteMsg(message._id)}>
-                      <BiXCircle />
-                    </Button> */}
+                    <BiXCircle />
+                  </Button> */}
+                    <div className="time">{formattedTime}</div>
                   </div>
                 </div>
               );
@@ -179,8 +212,40 @@ const Container = styled.div`
       align-items: center;
       gap: 1rem;
       .avatar {
+        position: relative;
         img {
           height: 3rem;
+        }
+        .status {
+          position: absolute;
+          bottom: 7px;
+          right: 0px;
+          width: 0.7rem;
+          height: 0.7rem;
+          border: 1px solid white;
+          // background-color: #ff0000;
+          background-color: #00ff00;
+          border-radius: 50%;
+        }
+        .status.offline {
+          position: absolute;
+          bottom: 7px;
+          right: 0px;
+          width: 0.7rem;
+          height: 0.7rem;
+          border: 1px solid white;
+          background-color: #ff0000;
+          border-radius: 50%;
+        }
+        .status-text {
+          margin: 2px 25px 0px 30px;
+          font-size: 11px;
+          text-align: center;
+          text-transform: capitalize;
+          font-weight: 300;
+          font-family: initial;
+          letter-spacing: 2px;
+          color: #c2e8f7;
         }
       }
       .username {
@@ -190,6 +255,7 @@ const Container = styled.div`
       }
     }
   }
+
   .chat-messages {
     padding: 1rem 2rem;
     display: flex;
@@ -219,14 +285,26 @@ const Container = styled.div`
         }
       }
     }
+
+    .time {
+      color: #e3d7c0;
+      // float: right;
+      font-size: 12px;
+      font-weight: 200;
+      margin: 10px 0px 0px 0px;
+    }
     .sended {
+      flex-direction: column;
       justify-content: flex-end;
+      align-items: end;
       .content {
         background-color: #551b8fd6;
       }
     }
     .recieved {
       justify-content: flex-start;
+      flex-direction: column;
+      align-items: start;
       .content {
         background-color: #615c66d6;
       }

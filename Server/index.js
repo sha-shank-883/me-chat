@@ -66,4 +66,46 @@ io.on("connection", (socket) => {
       socket.to(sendUserSocket).emit("msg-recieve", data.message);
     }
   });
+
+  // io.on("connection", (socket) => {
+  console.log(`Socket connected: ${socket.id}`);
+
+  // Add the user to the online users list
+  socket.on("add-user", (userId) => {
+    onlineUsers.set(userId, socket.id);
+    // Emit a socket event to update the online status of the user
+    io.emit("user-online", userId);
+  });
+
+  // Add a socket event to send the doc and save it in the database
+  socket.on("send-doc", (data) => {
+    const sendUserSocket = onlineUsers.get(data.to);
+    if (sendUserSocket) {
+      // Emit a socket event to send the doc
+      socket.to(sendUserSocket).emit("doc-recieve", data.document);
+      // Save the doc in the database
+      messageRoute.saveDoc(data.document);
+    }
+  });
+
+  // Remove the user from the online users list on disconnect
+  socket.on("disconnect", () => {
+    console.log(`Socket disconnected: ${socket.id}`);
+    const userId = getUserIdBySocketId(socket.id);
+    if (userId) {
+      onlineUsers.delete(userId);
+      // Emit a socket event to update the online status of the user
+      io.emit("user-offline", userId);
+    }
+  });
+
+  // Helper function to get the user ID by socket ID
+  const getUserIdBySocketId = (socketId) => {
+    for (const [userId, id] of onlineUsers.entries()) {
+      if (id === socketId) {
+        return userId;
+      }
+    }
+    return null;
+  };
 });
