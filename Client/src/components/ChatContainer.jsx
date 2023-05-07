@@ -5,7 +5,10 @@ import Logout from "./Logout";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import { BiTrash, BiHome, BiXCircle } from "react-icons/bi";
+// import Messages from "./Messages";
+// import contacts from "./Contacts";
 import axios from "axios";
+import io from "socket.io-client";
 import {
   getAllMessagesRoute,
   sendMessageRoute,
@@ -13,17 +16,14 @@ import {
   deleteUserProfileRoute,
 } from "../utils/APIRoutes";
 
-export default function ChatContainer({
-  currentChat,
-  currentUser,
-  socket,
-  onBack,
-}) {
+export default function ChatContainer({ currentChat, currentUser, onBack }) {
   const [messages, setMessages] = useState([]);
   const [arrivalMessage, setArrivalMessage] = useState(null);
   // const [onlineUsers, setOnlineUsers] = useState(new Set());
   const scrollRef = useRef();
   const navigate = useNavigate();
+
+  const socket = io();
 
   useEffect(() => {
     const fn = async () => {
@@ -64,6 +64,25 @@ export default function ChatContainer({
   useEffect(() => {
     arrivalMessage && setMessages((prev) => [...prev, arrivalMessage]);
   }, [arrivalMessage]);
+
+  // Listen for user status updates
+  useEffect(() => {
+    const handleUserStatusUpdated = ({ userId, status }) => {
+      setOnlineUsers((prev) => {
+        const updatedUsers = new Set(prev);
+        if (status === "online") {
+          updatedUsers.add(userId);
+        } else {
+          updatedUsers.delete(userId);
+        }
+        return updatedUsers;
+      });
+    };
+    socket.on("user-status-updated", handleUserStatusUpdated);
+    return () => {
+      socket.off("user-status-updated", handleUserStatusUpdated);
+    };
+  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behaviour: "smooth" });
@@ -106,6 +125,44 @@ export default function ChatContainer({
       }
     };
   }, [currentChat, socket]);
+
+  useEffect(() => {
+    if (socket.current) {
+      // Listen for user status updates
+      socket.current.on("user-status-update", (updatedUser) => {
+        if (updatedUser._id === currentUser._id) {
+          // Update current user's status
+          setCurrentUser(updatedUser);
+        } else {
+          // Update other user's status
+          setOnlineUsers((prev) => {
+            const updatedUsers = new Set(prev);
+            const userToUpdate = Array.from(updatedUsers).find(
+              (user) => user._id === updatedUser._id
+            );
+            if (userToUpdate) {
+              userToUpdate.status = updatedUser.status;
+            }
+            return updatedUsers;
+          });
+        }
+      });
+
+      // Update user status on connect/disconnect/reconnect
+      socket.current.on("connect", () => {
+        currentUser((prev) => ({ ...prev, status: "online" }));
+      });
+
+      socket.current.on("disconnect", () => {
+        currentUser((prev) => ({ ...prev, status: "offline" }));
+      });
+
+      socket.current.on("reconnect", () => {
+        currentUser((prev) => ({ ...prev, status: "online" }));
+      });
+    }
+  }, [socket, currentUser]);
+
   // console.log(currentChat);
   // var moment = require("moment"); // require
   // moment().format();

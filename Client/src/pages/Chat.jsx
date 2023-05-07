@@ -97,9 +97,11 @@ const Container = styled.div`
   }
   @media only screen and (max-width: 720px) {
     .container {
-      height: 85vh;
-      width: 100vw;
-      overflow: hidden;
+     height: 100vh;
+    width: 100vw;
+    position: absolute;
+    bottom: 0;
+    overflow: hidden;
       grid-template-columns: ${(props) =>
         props.isContactSelected ? "0% 100%" : "100% 0%"};
     }

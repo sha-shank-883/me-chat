@@ -25,4 +25,7 @@ const Container = styled.div`
   span {
     color: #4e00ff;
   }
+  @media only screen and (max-width: 720px) {
+    display: none;
+  }
 `;
