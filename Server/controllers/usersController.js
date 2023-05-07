@@ -67,11 +67,13 @@ module.exports.getAllUsers = async (req, res, next) => {
       "username",
       "avatarImage",
       "_id",
+      "status",
     ]);
     return res.json(users);
   } catch (ex) {
     next(ex);
   }
+  console.log(User.status);
 };
 
 module.exports.deleteUserProfile = async (req, res, next) => {

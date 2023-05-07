@@ -5,7 +5,6 @@ import Logout from "./Logout";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import { BiTrash, BiHome, BiXCircle } from "react-icons/bi";
-// import Messages from "./Messages";
 import axios from "axios";
 import {
   getAllMessagesRoute,
@@ -22,7 +21,7 @@ export default function ChatContainer({
 }) {
   const [messages, setMessages] = useState([]);
   const [arrivalMessage, setArrivalMessage] = useState(null);
-  const [onlineUsers, setOnlineUsers] = useState(new Set());
+  // const [onlineUsers, setOnlineUsers] = useState(new Set());
   const scrollRef = useRef();
   const navigate = useNavigate();
 
@@ -107,24 +106,7 @@ export default function ChatContainer({
       }
     };
   }, [currentChat, socket]);
-
-  useEffect(() => {
-    if (socket.current) {
-      socket.current.on("user-online", (userId) => {
-        setOnlineUsers(
-          (prevOnlineUsers) => new Set(prevOnlineUsers.add(userId))
-        );
-      });
-      socket.current.on("user-offline", (userId) => {
-        setOnlineUsers((prevOnlineUsers) => {
-          const updatedOnlineUsers = new Set(prevOnlineUsers);
-          updatedOnlineUsers.delete(userId);
-          return updatedOnlineUsers;
-        });
-      });
-    }
-  }, []);
-
+  // console.log(currentChat);
   // var moment = require("moment"); // require
   // moment().format();
   return (
@@ -138,14 +120,8 @@ export default function ChatContainer({
                   src={`data:image/svg+xml;base64,${currentChat.avatarImage}`}
                   alt=""
                 />
-                <div
-                  className={`status ${
-                    onlineUsers.has(currentChat._id) ? "online" : "offline"
-                  }`}
-                >
-                  <div className="status-text">
-                    {onlineUsers.has(currentChat._id) ? "online" : "offline"}
-                  </div>
+                <div className={`status ${currentChat.status}`}>
+                  <div className="status-text">{currentChat.status}</div>
                 </div>
               </div>
               <div className="username">

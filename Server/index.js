@@ -5,6 +5,8 @@ const mongoose = require("mongoose");
 const userRoutes = require("./routes/userRoutes");
 const messageRoute = require("./routes/messagesRoute");
 const app = express();
+const Users = require("./model/userModel");
+
 const socket = require("socket.io");
 require("dotenv").config();
 const PORT = process.env.PORT || 5000;
@@ -54,12 +56,11 @@ const io = socket(server, {
     credentials: true,
   },
 });
-global.onlineUsers = new Map();
+const onlineUsers = new Map();
 io.on("connection", (socket) => {
   global.chatSocket = socket;
   socket.on("add-user", (userId) => {
     onlineUsers.set(userId, socket.id);
-    io.emit("user-online", userId);
   });
   socket.on("send-msg", (data) => {
     const sendUserSocket = onlineUsers.get(data.to);
@@ -69,14 +70,20 @@ io.on("connection", (socket) => {
   });
 
   // io.on("connection", (socket) => {
-  console.log(`Socket connected: ${socket.id}`);
-
   // Add the user to the online users list
-  // socket.on("add-user", (userId) => {
-  //   onlineUsers.set(userId, socket.id);
-  //   // Emit a socket event to update the online status of the user
-  //   io.emit("user-online", userId);
-  // });
+  socket.on("add-user", (userId) => {
+    onlineUsers.set(userId, socket.id);
+    // Update the user status in the database
+    Users.findByIdAndUpdate(userId, { status: "online" }, { new: true })
+      .then((updatedUser) => {
+        console.log(`User ${updatedUser.username} is now online`);
+        // Emit a socket event to update the online status of the user
+        io.emit("user-online", userId);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  });
 
   // Add a socket event to send the doc and save it in the database
   socket.on("send-doc", (data) => {
@@ -90,13 +97,20 @@ io.on("connection", (socket) => {
   });
 
   // Remove the user from the online users list on disconnect
+  // Remove the user from the online users list on disconnect
+  // Remove the user from the online users list on disconnect
   socket.on("disconnect", () => {
-    console.log(`Socket disconnected: ${socket.id}`);
     const userId = getUserIdBySocketId(socket.id);
     if (userId) {
-      onlineUsers.delete(userId);
-      // Emit a socket event to update the online status of the user
-      io.emit("user-offline", userId);
+      Users.findByIdAndUpdate(userId, { status: "offline" }, { new: true })
+        .then((updatedUser) => {
+          console.log(`User ${updatedUser.username} is now offline`);
+          // Emit a socket event to update the offline status of the user
+          io.emit("user-offline", userId);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
     }
   });
 
@@ -109,4 +123,39 @@ io.on("connection", (socket) => {
     }
     return null;
   };
+
+  const userId = getUserIdBySocketId(socket.id);
+  if (userId) {
+    userModel
+      .findByIdAndUpdate(userId, { status: "online" }, { new: true })
+      .then((updatedUser) => {
+        console.log(`User ${updatedUser.username} is now online`);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }
+
+  // Helper function to update the status of offline users
+  const updateOfflineUsersStatus = () => {
+    // Get the list of offline users
+    Users.find({ status: "online" })
+      .then((offlineUsers) => {
+        // Update the status of offline users to "offline"
+        offlineUsers.forEach((user) => {
+          if (!onlineUsers.has(user._id.toString())) {
+            user.status = "offline";
+            user.save();
+            io.emit("user-offline", user._id);
+            console.log(`User ${user.username} is now offline`);
+          }
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+
+  // Call the updateOfflineUsersStatus function every 5 minutes
+  setInterval(updateOfflineUsersStatus, 5 * 1000);
 });
