@@ -97,9 +97,9 @@ const Container = styled.div`
   }
   @media only screen and (max-width: 720px) {
     .container {
-     height: 100vh;
+     height: 90vh;
     width: 100vw;
-    position: absolute;
+    position: fixed;
     bottom: 0;
     overflow: hidden;
       grid-template-columns: ${(props) =>
