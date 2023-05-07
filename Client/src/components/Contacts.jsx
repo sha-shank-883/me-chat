@@ -143,7 +143,7 @@ const Container = styled.div`
         p {
           color: #ffffffc4;
           display: block;
-          position: absolute;
+          position: relative;
           font-size: 12px;
           margin: 3px 0px 0px 2px;
         }
