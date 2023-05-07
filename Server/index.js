@@ -96,9 +96,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Remove the user from the online users list on disconnect
-  // Remove the user from the online users list on disconnect
-  // Remove the user from the online users list on disconnect
   socket.on("disconnect", () => {
     const userId = getUserIdBySocketId(socket.id);
     if (userId) {
@@ -156,6 +153,6 @@ io.on("connection", (socket) => {
       });
   };
 
-  // Call the updateOfflineUsersStatus function every 5 minutes
+  // Call the updateOfflineUsersStatus function every 5 sec
   setInterval(updateOfflineUsersStatus, 5 * 1000);
 });
